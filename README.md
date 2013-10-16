@@ -17,7 +17,7 @@ Declare a dependency in `project.clj`
 Require:
 
 ``` clojure
-(ns sample (:require [intermine.client :as im]))
+(ns sample (:require intermine.client))
 ```
 
 Run a query:
