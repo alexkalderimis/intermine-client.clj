@@ -18,7 +18,7 @@ Require:
 
 ``` clojure
 (ns sample (:require [intermine.client :as im]))
-``
+```
 
 Run a query:
 
