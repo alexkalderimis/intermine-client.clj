@@ -1,20 +1,12 @@
 (ns intermine.client.model
-  (:require [clojure.data.json :as json]
-            [http.async.client :as http]))
+  (:use intermine.client.futures
+        intermine.client.transport))
 
-(defn- get-str-f [uri]
-  (future (with-open [client (http/create-client)]
-    (->> uri
-         (http/GET client)
-         http/await
-         http/string))))
+(declare coalesce-fields)
 
-(defn- get-json [uri]
-  (future (with-open [client (http/create-client)]
-    (-> (http/GET client uri :headers {:Accept "application/json"})
-        http/await
-        http/string
-        (json/read-str :key-fn keyword)))))
+(defn get-model [service]
+  (eventually [model (get-in-json service "/model" :model)]
+      (coalesce-fields model)))
 
 (defn get-class-def [m n] (get-in m [:classes (keyword n)]))
 
@@ -25,15 +17,6 @@
           (apply merge (map (cds name) [:attributes :references :collections]))))
         ]
     (assoc model :classes (reduce combine-fields classes class-names))))
-
-(defn get-model [service]
-  (future (-> service
-    :base
-    (str "/model")
-    get-json
-    deref
-    :model
-    coalesce-fields)))
 
 (defn- invalid-path [state part]
   (if (:valid state)
@@ -47,9 +30,10 @@
   ([state next-def subclasses] 
     (let [defs      (conj (:defs state) next-def)
           path-key  (clojure.string/join "." (map :name defs))
+          leaf      (not (nil? (:type next-def)))
           next-type (or (subclasses path-key)
                         (some next-def [:type :referencedType :name]))]
-      {:valid true :type next-type :defs defs})))
+      {:valid true :type next-type :defs defs :leaf leaf})))
 
 (defn- resolve-path [model subclasses state part]
   (let [cd (get-class-def model (:type state))
@@ -60,7 +44,7 @@
 
 (defn- make-root-path [model class-name]
   (if-let [class-def (get-class-def model class-name)]
-    (valid-path {:defs []} class-def)
+    (valid-path {:defs [] :leaf false} class-def)
     {:valid false :failed-on class-name}))
 
 (defn make-path
