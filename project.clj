@@ -7,5 +7,7 @@
   :min-lein-version "2.0.0"
   :dependencies [
     [org.clojure/clojure "1.4.0"]
+    [org.slf4j/slf4j-simple "1.7.5"]
+    [org.clojure/data.xml "0.0.7"]
     [org.clojure/data.json "0.2.3"]
     [http.async.client "0.5.2"]])
