@@ -28,7 +28,7 @@ Run a query:
 (let [service {:base "http://www.flymine.org/query/service"}
       query   {:select ["Gene.proteins"] :where  [[:lookup "bsk"]]}
       n-proteins @(intermine.client/count service query)]
-    (println "Eve has" n-proteins "proteins"))
+    (println "Basket has" n-proteins "proteins"))
 ```
 
 ## License
