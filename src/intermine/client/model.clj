@@ -4,9 +4,21 @@
 
 (declare coalesce-fields)
 
+(def models (atom {}))
+(def model-requests (atom 0))
+
+(defn drop-cache [] (reset! models {}))
+
 (defn get-model [service]
-  (eventually [model (get-in-json service "/model" :model)]
-      (coalesce-fields model)))
+  "Return a future for the model that describes the schema of this service"
+  (if-let [m (find @models service)]
+    (val m) ;; in cache - return it
+    (do
+      (swap! model-requests inc) ;; Record that we made a request
+      (let [mp (eventually [model (get-in-json service "/model" :model)]
+                (coalesce-fields model))]
+        (swap! models assoc service mp) ;; store in the cache 
+        mp)))) ;; Return a (future model)
 
 (defn get-class-def [m n] (get-in m [:classes (keyword n)]))
 
