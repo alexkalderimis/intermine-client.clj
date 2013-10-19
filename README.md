@@ -23,12 +23,12 @@ Require:
 Run a query:
 
 ``` clojure
+;; All results come as instances of clojure.core/future, so 
+;; we dereference the call to intermine.client/count
 (let [service {:base "http://www.flymine.org/query/service"}
-      query   {
-        :select ["Gene.proteins.name"]
-        :where  [[:lookup "eve"]]}
-      n-proteins (intermine.client/count service query)]
-    (println (str "Found" n-proteins "proteins")))
+      query   {:select ["Gene.proteins"] :where  [[:lookup "eve"]]}
+      n-proteins @(intermine.client/count service query)]
+    (println (str "Eve has" n-proteins "proteins")))
 ```
 
 ## License
