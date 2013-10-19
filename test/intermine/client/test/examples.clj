@@ -1,5 +1,6 @@
 (ns intermine.client.test.examples
   (:use intermine.client.futures)
+  (:import java.util.Calendar)
   (:require [intermine.client :as c]
             [intermine.client.model :as m]))
 
@@ -35,3 +36,19 @@
                  (is (not (= (:value transcript) sndPrimId')))
                  (is (= transcript (select-keys cell (keys transcript))))
                  )))
+
+(defn find-where [where xs]
+  (first (filter #(= where (select-keys % (keys where))) xs)))
+(defn date->year [date]
+  (-> (doto (Calendar/getInstance) (.setTime date)) (.get Calendar/YEAR)))
+(def is-valid-status #{:CURRENT :TO_UPGRADE})
+(def get-year (comp date->year :dateCreated))
+
+(deftest lists
+  (let [service {:base "http://www.flymine.org/query/service"}
+        pl3 "PL classIIIc"]
+    @(eventually [lists (c/lists service)]
+                 (is (> (count lists) 20))
+                 (is (every? (comp is-valid-status :status) lists))
+                 (is (= 2008 (get-year (find-where {:name pl3} lists)))))))
+
