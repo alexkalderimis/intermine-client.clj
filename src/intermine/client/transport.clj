@@ -1,20 +1,21 @@
 (ns intermine.client.transport
+  (:refer-clojure :exclude (await))
   (:import [java.io IOException])
-  (:require [clojure.data.json :as json]
-            [http.async.client :as http]))
+  (:use [http.async.client :only (create-client await string GET POST)])
+  (:require [clojure.data.json :as json]))
 
-(defn- get-str-f [uri]
-  (future (with-open [client (http/create-client)]
+(defn get-str-f [uri]
+  (future (with-open [client (create-client)]
     (->> uri
-         (http/GET client)
-         http/await
-         http/string))))
+         (GET client)
+         await
+         string))))
 
 (defn- get-json [uri]
-  (future (with-open [client (http/create-client)]
-    (-> (http/GET client uri :headers {:Accept "application/json"})
-        http/await
-        http/string
+  (future (with-open [client (create-client)]
+    (-> (GET client uri :headers {:Accept "application/json"})
+        await
+        string
         (json/read-str :key-fn keyword)))))
 
 (defn- check-for-error [result]
@@ -24,16 +25,16 @@
                             (map result [:statusCode :error]))))))
 
 (defn get-in-json [service path key & {:keys [params] :as options}]
-  (future (with-open [client (http/create-client)]
+  (future (with-open [client (create-client)]
     (let [uri (str (:base service) path)
-          query (merge {:token (:token service)} params)
+          query (merge (select-keys service [:token]) params)
           mimetype (str "application/json"
                         (if-let [t (:type options)] (str ";type=" t) ""))
           headers {:Accept mimetype}]
       (-> client
-          (http/POST uri :query query :headers headers)
-          http/await
-          http/string
+          (POST uri :query query :headers headers)
+          await
+          string
           (json/read-str :key-fn keyword)
           check-for-error
           key)))))
