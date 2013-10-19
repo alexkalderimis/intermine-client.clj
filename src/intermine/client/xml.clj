@@ -9,7 +9,7 @@
 (defn expandRefs [model path-str]
   (let [path (make-path model path-str)]
     (if (:leaf path)
-      path
+      (->> path :defs (map :name) (join "."))
       (let [cd (get-class-def model (:type path))]
         (map #(str path-str "." %) (map name (keys (:attributes cd))))))))
 
