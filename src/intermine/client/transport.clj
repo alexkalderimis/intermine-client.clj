@@ -24,18 +24,22 @@
     (throw (IOException. (apply format "[ERROR: %s] %s"
                             (map result [:statusCode :error]))))))
 
+;; Memoizing this fn provides caching to the whole system. But dangerous
+;; if big queries are made - make caching a parameter on a session connection
+;; object.
 (defn get-in-json [service path key & {:keys [params] :as options}]
   (future (with-open [client (create-client)]
     (let [uri (str (:base service) path)
           query (merge (select-keys service [:token]) params)
           mimetype (str "application/json"
                         (if-let [t (:type options)] (str ";type=" t) ""))
-          headers {:Accept mimetype}]
+          headers {:Accept mimetype}
+          meth (cond (= :GET (:method options)) #'GET
+                     :default #'POST)]
       (-> client
-          (POST uri :query query :headers headers)
+          (meth uri :query query :headers headers)
           await
           string
           (json/read-str :key-fn keyword)
           check-for-error
           key)))))
-
