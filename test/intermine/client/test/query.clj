@@ -18,6 +18,15 @@
     (is (= {:root "Gene" :select ["symbol" "length"]}
            (q/select {:root "Gene"} "symbol" "length")))))
 
+(deftest also-select
+  (testing "Adding columns to the select list"
+    (is (= {:select ["Gene.name" "symbol"]}
+           (q/also-select {:select ["Gene.name"]} "symbol")))
+    (is (= {:root "Gene" :select ["symbol" "name"]}
+           (q/also-select {:root "Gene" :select ["symbol"]} "name")))
+    (is (= {:root "Gene" :select ["symbol" "name"]}
+           (q/also-select {:root "Gene"} "symbol" "name")))))
+
 (deftest compositions
   (testing "Building a query using function"
     (let [pid  "primaryIdentifier"
