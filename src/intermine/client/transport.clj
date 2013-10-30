@@ -1,7 +1,7 @@
 (ns intermine.client.transport
   (:refer-clojure :exclude (await))
   (:import [java.io IOException])
-  (:use [http.async.client :only (create-client await string GET POST)])
+  (:use [http.async.client :only (stream-seq create-client await string GET POST)])
   (:require [clojure.data.json :as json]))
 
 (defn get-str-f [uri]
@@ -43,3 +43,13 @@
           (json/read-str :key-fn keyword)
           check-for-error
           key)))))
+
+;; (defn [s]
+;;  (cons 
+
+;;(defn lazy-json [uri]
+;;  (with-open [client (create-client)]
+;;    (let [resp (stream-seq client :get uri)
+;;          cnks (string resp)]
+;;      (lazy-seq (next-obj cnks)))))
+

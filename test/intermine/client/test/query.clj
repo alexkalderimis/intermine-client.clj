@@ -38,17 +38,25 @@
 
 (deftest with-optional
   (testing "Adding an outer join for optional attributes"
+    (is (= {:outer-joins ["proteins" "organism"]}
+           (q/with-optional {:outer-joins ["proteins"]} "organism")))
+    (is (= {:outer-joins ["proteins" "organism" "location"]}
+           (q/with-optional {:outer-joins ["proteins"]}
+                            "organism" "location")))
     (is (= {:outer-joins ["proteins"]}
            (q/with-optional {} "proteins")))))
 
 (deftest compositions
   (testing "Building a query using function"
     (let [pid  "primaryIdentifier"
+          org  "organism"
           exp {:root "Gene"
                :sort-order ["length" :asc]
-               :select [["primaryIdentifier"]]
+               :outer-joins ["organism"]
+               :select [["primaryIdentifier" "organism"]]
                :where [[:lookup "eve"]]}]
       (= exp (-> (q/from "Gene")
-                 (q/select pid)
+                 (q/select pid org)
+                 (q/with-optional org)
                  (q/where :lookup "eve")
                  (q/order-by "length"))))))
