@@ -27,11 +27,28 @@
     (is (= {:root "Gene" :select ["symbol" "name"]}
            (q/also-select {:root "Gene"} "symbol" "name")))))
 
+(deftest order-by
+  (testing "Adding a sort order"
+    (is (= {:sort-order ["length" :asc]}
+           (q/order-by {} "length" :asc)))
+    (is (= {:sort-order ["length" :asc]}
+           (q/order-by {} "length")))
+    (is (= {:sort-order ["length" :asc "symbol" :desc]}
+           (q/order-by {} "length" :asc "symbol" :desc)))))
+
+(deftest with-optional
+  (testing "Adding an outer join for optional attributes"
+    (is (= {:outer-joins ["proteins"]}
+           (q/with-optional {} "proteins")))))
+
 (deftest compositions
   (testing "Building a query using function"
     (let [pid  "primaryIdentifier"
           exp {:root "Gene"
+               :sort-order ["length" :asc]
                :select [["primaryIdentifier"]]
                :where [[:lookup "eve"]]}]
-      (= exp (-> (q/from "Gene") (q/select pid) (q/where :lookup "eve"))))))
-
+      (= exp (-> (q/from "Gene")
+                 (q/select pid)
+                 (q/where :lookup "eve")
+                 (q/order-by "length"))))))
