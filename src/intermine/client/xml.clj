@@ -30,7 +30,7 @@
     [:query {:model (:name model) :view (join " " cols)}
       (map (partial conj [:constraint]) wheres)])
 
-(defn query-xml [model query]
+(defn canonical [model query]
   (let [cols (query :select) 
         root (or (:root query) (-> cols first (.split "\\.") first))
         col-paths (->> cols
@@ -38,6 +38,12 @@
                        (map (partial expandRefs model))
                        flatten)
         where (query :where)
-        where-recs (map #(constraint model root %) where)
+        where-recs (map #(constraint model root %) where)]
+    {:root root :select col-paths :where where-recs}))
+
+(defn query-xml [model query]
+  (let [canon (canonical model query)
+        col-paths (:select canon)
+        where-recs (:where canon)
         xml-expr (to-sexpr model col-paths where-recs)]
     (emit-str (sexp-as-element xml-expr))))

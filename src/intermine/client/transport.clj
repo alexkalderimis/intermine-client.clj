@@ -28,7 +28,7 @@
 ;; if big queries are made - make caching a parameter on a session connection
 ;; object.
 (defn get-in-json [service path key & {:keys [params] :as options}]
-  (future (with-open [client (create-client)]
+  (with-open [client (create-client)]
     (let [uri (str (:base service) path)
           query (merge (select-keys service [:token]) params)
           mimetype (str "application/json"
@@ -42,7 +42,7 @@
           string
           (json/read-str :key-fn keyword)
           check-for-error
-          key)))))
+          key))))
 
 ;; (defn [s]
 ;;  (cons 

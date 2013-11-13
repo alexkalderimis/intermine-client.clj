@@ -10,15 +10,14 @@
 (defn drop-cache [] (reset! models {}))
 
 (defn get-model [service]
-  "Return a future for the model that describes the schema of this service"
+  "Return the model that describes the schema of this service"
   (if-let [m (find @models service)]
     (val m) ;; in cache - return it
     (do
       (swap! model-requests inc) ;; Record that we made a request
-      (let [mp (eventually [model (get-in-json service "/model" :model)]
-                (coalesce-fields model))]
-        (swap! models assoc service mp) ;; store in the cache 
-        mp)))) ;; Return a (future model)
+      (let [model (-> service (get-in-json "/model" :model) coalesce-fields)]
+        (swap! models assoc service model) ;; store in the cache 
+        model))))
 
 (defn get-class-def [m n] (get-in m [:classes (keyword n)]))
 
